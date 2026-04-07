@@ -1,0 +1,65 @@
+version: v1.0
+name: Semaphore .NET example
+
+agent:
+  machine:
+    type: f1-standard-2
+    os_image: ubuntu2404
+
+blocks:
+  - name: Inspect Toolchain
+    task:
+      jobs:
+        - name: dotnet info
+          commands:
+            - checkout
+            - dotnet --info
+
+  - name: Restore
+    task:
+      jobs:
+        - name: restore solution
+          commands:
+            - checkout
+            - dotnet restore HelloSemaphore.sln
+
+  - name: Build
+    task:
+      jobs:
+        - name: build solution
+          commands:
+            - checkout
+            - dotnet restore HelloSemaphore.sln
+            - dotnet build HelloSemaphore.sln --configuration Release --no-restore --verbosity normal
+
+  - name: Test
+    task:
+      jobs:
+        - name: run unit tests
+          commands:
+            - checkout
+            - mkdir -p artifacts/test-results
+            - dotnet restore HelloSemaphore.sln
+            - dotnet build HelloSemaphore.sln --configuration Release --no-restore --verbosity minimal
+            - dotnet test HelloSemaphore.sln --configuration Release --no-build --no-restore --verbosity normal --logger "console;verbosity=normal" --logger "trx;LogFileName=hello-semaphore-tests.trx" --results-directory artifacts/test-results
+            - find artifacts/test-results -maxdepth 2 -type f | sort
+
+  - name: Publish
+    task:
+      jobs:
+        - name: publish app
+          commands:
+            - checkout
+            - dotnet restore HelloSemaphore.sln
+            - dotnet build HelloSemaphore.sln --configuration Release --no-restore
+            - dotnet publish src/HelloSemaphore.App/HelloSemaphore.App.csproj --configuration Release --no-build --output artifacts/publish
+            - find artifacts/publish -maxdepth 2 -type f | sort
+
+  - name: Run Demo
+    task:
+      jobs:
+        - name: hello world
+          commands:
+            - checkout
+            - dotnet restore HelloSemaphore.sln
+            - dotnet run --project src/HelloSemaphore.App/HelloSemaphore.App.csproj --configuration Release --no-restore

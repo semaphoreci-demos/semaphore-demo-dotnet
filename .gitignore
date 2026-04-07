@@ -1,0 +1,8 @@
+bin/
+obj/
+artifacts/
+.sem/
+.vs/
+.DS_Store
+.idea/
+.vscode/
