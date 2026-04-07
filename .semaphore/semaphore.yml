@@ -5,6 +5,10 @@ agent:
   machine:
     type: f1-standard-2
     os_image: ubuntu2404
+    
+fail_fast:
+  stop:
+    when: "branch = 'main'"    
 
 blocks:
   - name: Inspect Toolchain
